@@ -1,0 +1,17 @@
+{
+  "name": "osc-machine",
+  "version": "1.0.0",
+  "description": "Beams OSC converted from midi out into the ether because reasons.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "wes.hatch@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.3.0",
+    "midiconvert": "^0.4.1",
+    "osc-js": "^1.0.5",
+    "tone": "^0.11.11"
+  }
+}

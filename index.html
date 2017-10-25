@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script src="./node_modules/osc-js/dist/osc.min.js"></script>
+  <script>
+    var osc = new OSC();
+    osc.open({ port: 9912 });
+    osc.on('/socket', (message) => {
+      console.log(message.args); // prints the message arguments
+    });
+
+
+  var socket = new WebSocket('ws://localhost:9912');
+
+  socket.addEventListener('open', function() {
+    console.log('Hello Server!');
+  });
+
+  // socket.addEventListener('message', function(event) {
+  //   // console.log('received: %s', event);
+  //   console.log(event);
+  // });
+  </script>
+</head>
+<body>
+ hiya
+</body>
+</html>
