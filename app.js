@@ -1,15 +1,30 @@
+// -----------------------------------------------
+//  Application
+// -----------------------------------------------
 const MidiConvert = require('midiconvert');
-const Tone = require('tone'); // tone/Tone/event/Part'
+// const Tone = require('Tone').Transport;
+const Tone2 = require('Tone').Part;
 const OSC = require('osc-js');
+const fs = require('fs');
 
-// --------------------------------
+let songs = [];
 
+fs.readdirSync('songs').forEach((name) => {
+  songs.push(route);
+});
+
+
+// -----------------------------------------------
+//  Open Socket and Select MIDI
+// -----------------------------------------------
 const socket = new OSC({
   plugin: new OSC.WebsocketServerPlugin()
 });
 
 const loadMidi = new Promise((resolve, reject) => {
-  MidiConvert.load('path/to/midi.mid', (midi) => {
+  let random = Math.floor(Math.random() * songs.length);
+
+  MidiConvert.load(songs[random], (midi) => {
     resolve(midi);
   });
 });
@@ -18,13 +33,24 @@ const socketOpen = new Promise((resolve, reject) => {
   socket.on('open', resolve);
 });
 
-// -----------------
 
+// -----------------------------------------------
+//  Load MIDI and stream
+// -----------------------------------------------
 Promise.all([loadMidi, socketOpen]).then(values => {
   const midi = values[0];
+  let meta = {
+    bpm: midi.header.bpm,
+    names: []
+  };
 
-  // loadMidi.then((midi) => {
-  // make sure you set the tempo before you schedule the events
+  midi.tracks.forEach((track) => {
+    if (track.notes) {
+      meta.names.push(track.name.trim());
+    }
+  });
+
+  // set the tempo before you schedule the events
   Tone.Transport.bpm.value = midi.header.bpm;
 
   // pass in the note events from one of the tracks as the second argument to Tone.Part
@@ -38,9 +64,8 @@ Promise.all([loadMidi, socketOpen]).then(values => {
 });
 
 
-// -----------------
-
-
-// Blast off
+// -----------------------------------------------
+//  Blast off
+// -----------------------------------------------
 // socket.on('open', play);
 socket.open({ port: 9912 }); // receive at: ws://localhost:9912

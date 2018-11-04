@@ -1,0 +1,79 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+
+jobs:
+  build:
+    docker:
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: circleci/node:9.2
+
+    working_directory: ~/oscmachine
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/oscmachine
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-oscmachine-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-oscmachine-
+
+      - run: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-oscmachine-{{ checksum "package.json" }}
+
+      # Build!
+      # - run: npm run build
+
+      # ** SUPER IMPORTANT **   keeps the /dist/ folder around for other steps
+      - persist_to_workspace:
+          root: .
+          paths: dist
+
+      # Tests!
+      # - run: npm test
+
+  deploy:
+    working_directory: ~/oscmachine
+    docker:
+      - image: circleci/node:9-browsers
+    steps:
+
+      # this contains the /dist folder, which we persisted in the build job
+      - attach_workspace:
+          at: ~/oscmachine
+
+      # Log the current branch
+      - run: echo ${CIRCLE_BRANCH}
+
+      - run:
+          name: Update Code in Droplet
+          # note: DROPLET_USER / DROPLET_IP vars are added in the CircleCI dashboard
+          command: scp -oStrictHostKeyChecking=no -r ~/oscmachine/dist/. ${DROPLET_USER}@${DROPLET_IP}:${DROPLET_PATH}
+          # command: rsync -e "ssh -o StrictHostKeyChecking=no" -r ~/oscmachine/dist/. ${DROPLET_USER}@${DROPLET_IP}:${DROPLET_PATH}
+
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+      - deploy:
+          requires:
+            - build
